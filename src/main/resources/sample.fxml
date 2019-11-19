@@ -1,0 +1,29 @@
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.GridPane?>
+
+<?import javafx.scene.control.Button?>
+
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.Label?>
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.kreml.StringTopicController">
+    <padding>
+        <Insets top="20" right="40" bottom="40" left="40"/>
+    </padding>
+    <GridPane alignment="center" hgap="10" vgap="10">
+        <padding>
+            <Insets top="10" right="10" bottom="10" left="10"/>
+        </padding>
+        <Label text="Broker Address:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <Label text="Topic Name:" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+        <TextField fx:id="brokerAddressField" prefWidth="300" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <TextField fx:id="topicNameField" prefWidth="300" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+        <RadioButton fx:id="shouldSeekToEnd" text="Seek to end" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+        <Button fx:id="startConsumer" text="Start Consumer" GridPane.columnIndex="1" GridPane.rowIndex="2"
+                onMouseClicked="#startConsumer"/>
+    </GridPane>
+    <TextArea fx:id="contentArea" prefWidth="600" prefHeight="800" wrapText="true" style=
+    "-fx-control-inner-background:#000000; -fx-font-family: Consolas; -fx-highlight-fill: #00CC00; -fx-highlight-text-fill: #000000; -fx-text-fill: #00ff00;"/>
+</VBox>
