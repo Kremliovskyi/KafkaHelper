@@ -1,7 +1,7 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.GridPane?>
@@ -18,7 +18,7 @@
         <Label text="Topic Name:" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
         <TextField fx:id="brokerAddressField" text="10.206.123.31:9092" prefWidth="300" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
         <TextField fx:id="topicNameField" text="metrics.raw" prefWidth="300" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
-        <RadioButton fx:id="shouldSeekToEnd" text="Seek to end" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+        <CheckBox fx:id="shouldSeekToEndCheckBox" selected="true" text="Seek to end" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
         <Button fx:id="startConsumer" text="Start Consumer" GridPane.columnIndex="1" GridPane.rowIndex="2"
                 onMouseClicked="#startConsumer"/>
     </GridPane>

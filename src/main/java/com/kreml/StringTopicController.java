@@ -4,7 +4,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.control.RadioButton;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
@@ -16,7 +16,7 @@ public class StringTopicController implements DataProxy {
     @FXML
     public TextField brokerAddressField;
     @FXML
-    public RadioButton shouldSeekToEnd;
+    public CheckBox shouldSeekToEndCheckBox;
     @FXML
     public Button startConsumer;
     @FXML
@@ -36,16 +36,16 @@ public class StringTopicController implements DataProxy {
                 stringKafka
                         .setBrokerAddress(brokerAddress)
                         .setTopicName(topicName)
-                        .setShouldSeekToEnd(shouldSeekToEnd.isSelected())
+                        .setShouldSeekToEnd(shouldSeekToEndCheckBox.isSelected())
                         .runConsumer();
                 startConsumer.setText("Stop Consumer");
-                shouldSeekToEnd.setDisable(true);
+                shouldSeekToEndCheckBox.setDisable(true);
             } else {
                 showAlert("Please provide topic name and broker address.");
             }
         } else {
             startConsumer.setText("Start Consumer");
-            shouldSeekToEnd.setDisable(false);
+            shouldSeekToEndCheckBox.setDisable(false);
             stringKafka.stopConsumer();
         }
 
