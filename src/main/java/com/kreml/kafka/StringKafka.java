@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
-import com.kreml.DataProxy;
+import com.kreml.RecordsProxy;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -18,6 +18,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
@@ -33,10 +34,10 @@ public class StringKafka {
     private String topicName;
     private ExecutorService executor;
     private boolean shouldSeekToEnd;
-    private DataProxy dataProxy;
+    private RecordsProxy recordsProxy;
 
-    public StringKafka(DataProxy dataProxy) {
-        this.dataProxy = dataProxy;
+    public StringKafka(RecordsProxy recordsProxy) {
+        this.recordsProxy = recordsProxy;
     }
 
     public StringKafka setBrokerAddress(String brokerAddress) {
@@ -64,6 +65,7 @@ public class StringKafka {
                         consumer.poll(Duration.of(5L, ChronoUnit.SECONDS));
 
                 StringBuilder result = new StringBuilder();
+                List<String> records = new ArrayList<>();
                 consumerRecords.forEach(record -> {
                     result.append("================================ Count: ").append(count.getAndIncrement())
                             .append(" ================================================").append("\n");
@@ -81,13 +83,15 @@ public class StringKafka {
                     String recordString = record.value();
                     if (recordString != null && !recordString.isEmpty()) {
                         result.append("Value: ").append(logJson(recordString)).append("\n");
-                        if (!executor.isShutdown()) {
-                            System.out.println(result.toString());
-                            dataProxy.data(result.toString());
-                            result.setLength(0);
-                        }
+                        records.add(result.toString());
+                        result.setLength(0);
                     }
                 });
+                if (!records.isEmpty() && !executor.isShutdown()) {
+                    System.out.println(records);
+                    recordsProxy.records(records);
+                    records.clear();
+                }
                 consumer.commitAsync();
             }
             consumer.close();

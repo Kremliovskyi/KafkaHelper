@@ -2,6 +2,7 @@ package com.kreml;
 
 import com.kreml.kafka.StringKafka;
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -18,7 +19,9 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 
-public class StringTopicController implements DataProxy {
+import java.util.List;
+
+public class StringTopicController implements RecordsProxy {
 
     @FXML
     public TextField topicNameField;
@@ -54,7 +57,10 @@ public class StringTopicController implements DataProxy {
                         .runConsumer();
                 startConsumer.setText("Stop Consumer");
                 shouldSeekToEndCheckBox.setDisable(true);
-                contentArea.getItems().clear();
+                ObservableList<String> items = contentArea.getItems();
+                if (items != null) {
+                    items.clear();
+                }
             } else {
                 showAlert("Please provide topic name and broker address.");
             }
@@ -77,8 +83,12 @@ public class StringTopicController implements DataProxy {
     }
 
     @Override
-    public void data(String data) {
-        contentArea.getItems().add(data);
+    public void records(List<String> records) {
+        ObservableList<String> items = contentArea.getItems();
+        items.addAll(records);
+        Platform.runLater(() -> {
+            contentArea.scrollTo(items.size());
+        });
     }
 
     @FXML
@@ -89,6 +99,12 @@ public class StringTopicController implements DataProxy {
     @FXML
     public void deSelectAll(MouseEvent mouseEvent) {
         contentArea.getSelectionModel().clearSelection();
+    }
+
+
+    @FXML
+    public void clear(MouseEvent mouseEvent) {
+        contentArea.getItems().clear();
     }
 
     private void initContentArea() {

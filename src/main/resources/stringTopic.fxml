@@ -25,8 +25,12 @@
                 onMouseClicked="#startConsumer"/>
     </GridPane>
     <ListView fx:id="contentArea" prefWidth="600" prefHeight="800" editable="true" />
-    <HBox alignment="TOP_CENTER">
+    <HBox alignment="TOP_CENTER" >
+        <padding>
+            <Insets top="10" right="10" bottom="10" left="10"/>
+        </padding>
         <Button text="Select All" onMouseClicked="#selectAll"/>
         <Button text="Deselect All" onMouseClicked="#deSelectAll"/>
+        <Button text="Clear" onMouseClicked="#clear"/>
     </HBox>
 </VBox>
