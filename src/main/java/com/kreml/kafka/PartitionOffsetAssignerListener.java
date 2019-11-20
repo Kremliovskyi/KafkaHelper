@@ -1,4 +1,4 @@
-package com.kreml;
+package com.kreml.kafka;
 
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -11,7 +11,7 @@ public class PartitionOffsetAssignerListener implements ConsumerRebalanceListene
     private KafkaConsumer consumer;
     private boolean shouldSeekToEnd;
 
-    public PartitionOffsetAssignerListener(KafkaConsumer kafkaConsumer, boolean shouldSeekToEnd) {
+    PartitionOffsetAssignerListener(KafkaConsumer kafkaConsumer, boolean shouldSeekToEnd) {
         this.consumer = kafkaConsumer;
         this.shouldSeekToEnd = shouldSeekToEnd;
     }

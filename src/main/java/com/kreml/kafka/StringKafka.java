@@ -1,11 +1,11 @@
-package com.kreml;
+package com.kreml.kafka;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
-import javafx.application.Platform;
+import com.kreml.DataProxy;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -67,7 +67,8 @@ public class StringKafka {
 
                 StringBuilder result = new StringBuilder();
                 consumerRecords.forEach(record -> {
-                    System.out.println("Records present" + count.get());
+                    result.append("================================ Count: ").append(count.getAndIncrement())
+                            .append(" ================================================").append("\n");
                     Map<String, String> headersMap = new HashMap<>();
                     record.headers().forEach(h -> headersMap.put(h.key(), new String(h.value())));
                     if (!headersMap.isEmpty()) {
@@ -82,23 +83,20 @@ public class StringKafka {
                     String recordString = record.value();
                     if (recordString != null && !recordString.isEmpty()) {
                         result.append("Value: ").append(logJson(recordString)).append("\n");
-                        result.append("================================ Count: ").append(count.getAndIncrement())
-                                .append(" ================================================").append("\n");
+                        if (shouldContinue) {
+                            System.out.println(result.toString());
+                            dataProxy.data(result.toString());
+                            result.setLength(0);
+                        }
                     }
                 });
-                if (result.length() > 0 && shouldContinue) {
-                    Platform.runLater(() -> {
-                        System.out.println("dataProxy.data(result.toString());");
-                        dataProxy.data(result.toString());
-                    });
-                }
                 consumer.commitAsync();
             }
             consumer.close();
         });
     }
 
-    void stopConsumer() {
+    public void stopConsumer() {
         shouldContinue = false;
         executor.shutdownNow();
     }
