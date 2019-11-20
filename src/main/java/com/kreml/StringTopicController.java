@@ -7,6 +7,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.MultipleSelectionModel;
@@ -14,6 +15,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextField;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 
 public class StringTopicController implements DataProxy {
@@ -79,9 +81,38 @@ public class StringTopicController implements DataProxy {
         contentArea.getItems().add(data);
     }
 
+    @FXML
+    public void selectAll(MouseEvent mouseEvent) {
+        contentArea.getSelectionModel().selectAll();
+    }
+
+    @FXML
+    public void deSelectAll(MouseEvent mouseEvent) {
+        contentArea.getSelectionModel().clearSelection();
+    }
+
     private void initContentArea() {
         MultipleSelectionModel<String> selectionModel = contentArea.getSelectionModel();
         selectionModel.setSelectionMode(SelectionMode.MULTIPLE);
+        contentArea.setCellFactory(param -> {
+            ListCell<String> cell = new ListCell<>();
+            cell.textProperty().bind(cell.itemProperty());
+            cell.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
+                if (event.getButton().equals(MouseButton.PRIMARY)) {
+                    contentArea.requestFocus();
+                    if (! cell.isEmpty()) {
+                        int index = cell.getIndex();
+                        if (selectionModel.getSelectedIndices().contains(index)) {
+                            selectionModel.clearSelection(index);
+                        } else {
+                            selectionModel.select(index);
+                        }
+                        event.consume();
+                    }
+                }
+            });
+            return cell;
+        });
         MenuItem item = new MenuItem("Copy");
         item.setOnAction(event -> {
             StringBuilder clipboardString = new StringBuilder();

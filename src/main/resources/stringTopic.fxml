@@ -7,6 +7,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.HBox?>
 <VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.kreml.StringTopicController">
     <padding>
         <Insets top="20" right="40" bottom="40" left="40"/>
@@ -24,4 +25,8 @@
                 onMouseClicked="#startConsumer"/>
     </GridPane>
     <ListView fx:id="contentArea" prefWidth="600" prefHeight="800" editable="true" />
+    <HBox alignment="TOP_CENTER">
+        <Button text="Select All" onMouseClicked="#selectAll"/>
+        <Button text="Deselect All" onMouseClicked="#deSelectAll"/>
+    </HBox>
 </VBox>

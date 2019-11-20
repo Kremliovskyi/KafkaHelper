@@ -23,12 +23,33 @@
     -fx-text-fill: lightgray;
 }
 
+.list-view{
+    -fx-background-color: black;
+}
+
+.list-cell:odd {
+    -fx-background-color: black;
+    -fx-text-fill: #00ff00;
+    -fx-font-size: 13;
+}
+
+.list-cell:even {
+    -fx-background-color: black;
+    -fx-text-fill: #00ff00;
+    -fx-font-size: 13;
+}
+
+.list-cell:filled:selected {
+    -fx-background-color: #00CC00;
+    -fx-text-fill: black;
+}
+
 .text-area {
     -fx-font-family: Consolas;
     -fx-highlight-fill: #00CC00;
     -fx-highlight-text-fill: #000000;
     -fx-text-fill: #00ff00;
-    -fx-font-size: 14;
+    -fx-font-size: 13;
 }
 .text-area .content{
     -fx-background-color: black;

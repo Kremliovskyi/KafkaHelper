@@ -31,7 +31,6 @@ public class StringKafka {
     private KafkaConsumer<String, String> consumer;
     private String brokerAddress;
     private String topicName;
-    private boolean shouldContinue;
     private ExecutorService executor;
     private boolean shouldSeekToEnd;
     private DataProxy dataProxy;
@@ -57,11 +56,10 @@ public class StringKafka {
 
     public void runConsumer() {
         executor = Executors.newSingleThreadExecutor();
-        shouldContinue = true;
         executor.submit(() -> {
             consumer = createConsumer();
             AtomicInteger count = new AtomicInteger(1);
-            while (shouldContinue) {
+            while (!executor.isShutdown()) {
                 final ConsumerRecords<String, String> consumerRecords =
                         consumer.poll(Duration.of(5L, ChronoUnit.SECONDS));
 
@@ -83,7 +81,7 @@ public class StringKafka {
                     String recordString = record.value();
                     if (recordString != null && !recordString.isEmpty()) {
                         result.append("Value: ").append(logJson(recordString)).append("\n");
-                        if (shouldContinue) {
+                        if (!executor.isShutdown()) {
                             System.out.println(result.toString());
                             dataProxy.data(result.toString());
                             result.setLength(0);
@@ -97,7 +95,6 @@ public class StringKafka {
     }
 
     public void stopConsumer() {
-        shouldContinue = false;
         executor.shutdownNow();
     }
 
