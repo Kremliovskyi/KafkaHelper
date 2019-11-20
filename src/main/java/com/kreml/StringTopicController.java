@@ -40,6 +40,7 @@ public class StringTopicController implements DataProxy {
                         .runConsumer();
                 startConsumer.setText("Stop Consumer");
                 shouldSeekToEndCheckBox.setDisable(true);
+                contentArea.clear();
             } else {
                 showAlert("Please provide topic name and broker address.");
             }

@@ -31,7 +31,7 @@ public class StringKafka {
     private KafkaConsumer<String, String> consumer;
     private String brokerAddress;
     private String topicName;
-    private boolean shouldContinue = true;
+    private boolean shouldContinue;
     private ExecutorService executor;
     private boolean shouldSeekToEnd;
     private DataProxy dataProxy;
@@ -57,6 +57,7 @@ public class StringKafka {
 
     public void runConsumer() {
         executor = Executors.newSingleThreadExecutor();
+        shouldContinue = true;
         executor.submit(() -> {
             consumer = createConsumer();
             AtomicInteger count = new AtomicInteger(1);
@@ -99,7 +100,7 @@ public class StringKafka {
 
     void stopConsumer() {
         shouldContinue = false;
-        executor.shutdown();
+        executor.shutdownNow();
     }
 
 
