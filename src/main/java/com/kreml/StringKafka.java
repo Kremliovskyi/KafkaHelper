@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -59,11 +60,9 @@ public class StringKafka {
         executor = Executors.newSingleThreadExecutor();
         executor.submit(() -> {
             consumer = createConsumer();
-//            if (shouldSeekToEnd) {
-//                seekToEnd(consumer);
-//            } else {
-//                seekToBeginning(consumer);
-//            }
+            if (shouldSeekToEnd) {
+                seekToEnd(consumer);
+            }
             AtomicInteger count = new AtomicInteger(1);
             while (shouldContinue) {
                 final ConsumerRecords<String, String> consumerRecords =
@@ -113,13 +112,13 @@ public class StringKafka {
         consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, brokerAddress);
         consumerProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, DE_SERIALIZER_NAME);
         consumerProperties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, DE_SERIALIZER_NAME);
-        consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, CONSUMER_GROUP_ID);
+        consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, shouldSeekToEnd ? CONSUMER_GROUP_ID : UUID.randomUUID().toString());
         consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, shouldSeekToEnd ? OffsetResetStrategy.LATEST.name().toLowerCase() :
                 OffsetResetStrategy.EARLIEST.name().toLowerCase());
         // Create the consumer using props.
         KafkaConsumer<String, String> myConsumer = new KafkaConsumer<>(consumerProperties);
         // Subscribe to the topic.
-        myConsumer.subscribe(Collections.singletonList(topicName), new PartitionOffsetAssignerListener(myConsumer, shouldSeekToEnd));
+        myConsumer.subscribe(Collections.singletonList(topicName));
         return myConsumer;
     }
 
@@ -133,12 +132,6 @@ public class StringKafka {
             records = consumer.poll(timeoutInSeconds);
             consumer.commitSync();
         } while(!records.isEmpty());
-    }
-
-    private void seekToBeginning(KafkaConsumer<String, String> consumer) {
-        Duration timeoutInSeconds = Duration.ofSeconds(5);
-        consumer.poll(timeoutInSeconds);
-        consumer.seekToBeginning(new ArrayList<>());
     }
 
     private String logJson(String JSONString) {
