@@ -5,20 +5,21 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
+import javafx.application.Platform;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.io.CharArrayReader;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,7 +31,7 @@ public class StringKafka {
     private KafkaConsumer<String, String> consumer;
     private String brokerAddress;
     private String topicName;
-    private boolean shouldContinue;
+    private boolean shouldContinue = true;
     private ExecutorService executor;
     private boolean shouldSeekToEnd;
     private DataProxy dataProxy;
@@ -70,6 +71,7 @@ public class StringKafka {
 
                 StringBuilder result = new StringBuilder();
                 consumerRecords.forEach(record -> {
+                    System.out.println("Records present" + count.get());
                     Map<String, String> headersMap = new HashMap<>();
                     record.headers().forEach(h -> headersMap.put(h.key(), new String(h.value())));
                     if (!headersMap.isEmpty()) {
@@ -77,13 +79,22 @@ public class StringKafka {
                         headersMap.forEach((s, s2) -> result.append(s).append(":").append(s2).append(","));
                         result.append("\n");
                     }
-                    result.append("Key: ").append(record.key()).append("\n");
-                    result.append("Value: ").append(logJson(record.value())).append("\n");
-                    result.append("================================ Count: ").append(count.getAndIncrement())
-                            .append(" ================================================").append("\n");
+                    String key = record.key();
+                    if (key != null && !key.isEmpty()) {
+                        result.append("Key: ").append(key).append("\n");
+                    }
+                    String recordString = record.value();
+                    if (recordString != null && !recordString.isEmpty()) {
+                        result.append("Value: ").append(logJson(recordString)).append("\n");
+                        result.append("================================ Count: ").append(count.getAndIncrement())
+                                .append(" ================================================").append("\n");
+                    }
                 });
                 if (result.length() > 0 && shouldContinue) {
-                    dataProxy.data(result.toString());
+                    Platform.runLater(() -> {
+                        System.out.println("dataProxy.data(result.toString());");
+                        dataProxy.data(result.toString());
+                    });
                 }
                 consumer.commitAsync();
             }
@@ -92,7 +103,7 @@ public class StringKafka {
     }
 
     void stopConsumer() {
-        shouldContinue = true;
+        shouldContinue = false;
         executor.shutdown();
     }
 

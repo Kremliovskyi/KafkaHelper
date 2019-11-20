@@ -2,7 +2,11 @@ package com.kreml;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 
 public class StringTopicController implements DataProxy {
@@ -40,7 +44,7 @@ public class StringTopicController implements DataProxy {
                 showAlert("Please provide topic name and broker address.");
             }
         } else {
-            startConsumer.setText("Stop Consumer");
+            startConsumer.setText("Start Consumer");
             shouldSeekToEnd.setDisable(false);
             stringKafka.stopConsumer();
         }
