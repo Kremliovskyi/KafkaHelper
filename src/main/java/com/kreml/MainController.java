@@ -4,6 +4,9 @@ import com.kreml.kafka.AbstractKafkaConsumer;
 import com.kreml.kafka.AvroKafka;
 import com.kreml.kafka.StringKafka;
 import javafx.application.Platform;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleListProperty;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -22,6 +25,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import org.apache.commons.validator.routines.UrlValidator;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainController implements RecordsProxy {
@@ -41,8 +45,10 @@ public class MainController implements RecordsProxy {
     @FXML
     private ListView<String> contentArea;
 
-    private AbstractKafkaConsumer kafkaConsumer;
+    private AbstractKafkaConsumer<?> kafkaConsumer;
     private boolean isConsumerStarted;
+    private ObservableList<String> observableList = FXCollections.observableList(new ArrayList<>());
+    private ListProperty<String> stringListProperty = new SimpleListProperty<>(observableList);
 
     public MainController() {
     }
@@ -56,6 +62,7 @@ public class MainController implements RecordsProxy {
         avroTopicCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
             schemaRegistryTextField.clear();
         });
+        contentArea.itemsProperty().bind(stringListProperty);
     }
 
     @FXML
@@ -76,7 +83,7 @@ public class MainController implements RecordsProxy {
                     .setBrokerAddress(brokerAddress)
                     .setTopicName(topicName)
                     .setShouldSeekToEnd(shouldSeekToEndCheckBox.isSelected())
-                    .runConsumer();
+                    .startConsumer();
             isConsumerStarted = true;
             startConsumer.setText("Stop Consumer");
             shouldSeekToEndCheckBox.setDisable(true);
@@ -106,13 +113,13 @@ public class MainController implements RecordsProxy {
         if (avroTopicCheckBox.isSelected()) {
             String schemaRegistryIp = schemaRegistryTextField.getText();
             if (validateURL(schemaRegistryIp)) {
-                kafkaConsumer = new AvroKafka(this, schemaRegistryIp);
+                kafkaConsumer = new AvroKafka(observableList, schemaRegistryIp);
             } else {
                 showAlert("Please provide valid Schema Registry URL.");
                 stop = true;
             }
         } else {
-            kafkaConsumer = new StringKafka(this);
+            kafkaConsumer = new StringKafka(observableList);
         }
         return stop;
     }
@@ -156,8 +163,7 @@ public class MainController implements RecordsProxy {
 
     @FXML
     public void clear(MouseEvent mouseEvent) {
-        contentArea.getItems().clear();
-        kafkaConsumer.resetCounter();
+        kafkaConsumer.resetList();
     }
 
     private void initContentArea() {

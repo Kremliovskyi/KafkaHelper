@@ -1,8 +1,8 @@
 package com.kreml.kafka;
 
-import com.kreml.RecordsProxy;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.confluent.kafka.serializers.KafkaAvroSerializerConfig;
+import javafx.collections.ObservableList;
 import org.apache.avro.generic.GenericData;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -14,8 +14,8 @@ public class AvroKafka extends AbstractKafkaConsumer<GenericData.Record> {
 
     private String schemaRegistry;
 
-    public AvroKafka(RecordsProxy recordsProxy, String schemaRegistry) {
-        super(recordsProxy);
+    public AvroKafka(ObservableList<String> observableList, String schemaRegistry) {
+        super(observableList);
         this.schemaRegistry = schemaRegistry;
     }
 

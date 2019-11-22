@@ -1,6 +1,6 @@
 package com.kreml.kafka;
 
-import com.kreml.RecordsProxy;
+import javafx.collections.ObservableList;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -10,8 +10,8 @@ import java.util.Properties;
 
 public class StringKafka extends AbstractKafkaConsumer<String> {
 
-    public StringKafka(RecordsProxy recordsProxy) {
-        super(recordsProxy);
+    public StringKafka(ObservableList<String> observableList) {
+        super(observableList);
     }
 
     @Override

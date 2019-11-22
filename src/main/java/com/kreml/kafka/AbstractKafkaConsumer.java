@@ -5,7 +5,9 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
-import com.kreml.RecordsProxy;
+import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -16,44 +18,40 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import java.io.CharArrayReader;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class AbstractKafkaConsumer<V> {
+public abstract class AbstractKafkaConsumer<V> extends Service<ObservableList<String>> {
 
-    static final String CONSUMER_GROUP_ID = "1";
+    private static final String CONSUMER_GROUP_ID = "1";
     private KafkaConsumer<String, V> consumer;
     private String brokerAddress;
     private String topicName;
-    private ExecutorService executor;
     private boolean shouldSeekToEnd;
-    private RecordsProxy recordsProxy;
     private AtomicInteger count = new AtomicInteger(1);
+    private boolean proceed;
+    private ObservableList<String> observableList;
 
     abstract KafkaConsumer<String, V> createConsumer();
 
     abstract String getRecordString(V value);
 
-    public AbstractKafkaConsumer(RecordsProxy recordsProxy) {
-        this.recordsProxy = recordsProxy;
+    AbstractKafkaConsumer(ObservableList<String> observableList) {
+        this.observableList = observableList;
     }
 
     public String getBrokerAddress() {
         return brokerAddress;
     }
 
-    public AbstractKafkaConsumer setBrokerAddress(String brokerAddress) {
+    public AbstractKafkaConsumer<V> setBrokerAddress(String brokerAddress) {
         this.brokerAddress = brokerAddress;
         return this;
     }
 
-    public AbstractKafkaConsumer setTopicName(String topicName) {
+    public AbstractKafkaConsumer<V> setTopicName(String topicName) {
         this.topicName = topicName;
         return this;
     }
@@ -62,7 +60,7 @@ public abstract class AbstractKafkaConsumer<V> {
         return topicName;
     }
 
-    public AbstractKafkaConsumer setShouldSeekToEnd(boolean shouldSeekToEnd) {
+    public AbstractKafkaConsumer<V> setShouldSeekToEnd(boolean shouldSeekToEnd) {
         this.shouldSeekToEnd = shouldSeekToEnd;
         return this;
     }
@@ -72,39 +70,46 @@ public abstract class AbstractKafkaConsumer<V> {
     }
 
     public void stopConsumer() {
-        executor.shutdownNow();
+        proceed = false;
     }
 
-    public void resetCounter() {
+    public void resetList() {
         count.set(1);
+        observableList.clear();
     }
 
-    public void runConsumer() {
-        executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            consumer = createConsumer();
-            count = new AtomicInteger(1);
-            while (!executor.isShutdown()) {
-                final ConsumerRecords<String, V> consumerRecords =
-                        consumer.poll(Duration.of(5L, ChronoUnit.SECONDS));
+    @Override
+    protected Task<ObservableList<String>> createTask() {
+        return new Task<ObservableList<String>>() {
 
-                StringBuilder result = new StringBuilder();
-                List<String> records = new ArrayList<>();
-                consumerRecords.forEach(record -> {
-                    result.append("================================ Count: ").append(count.getAndIncrement())
-                            .append(" ================================================").append("\n");
-                    getHeaders(result, record);
-                    getKey(result, record);
-                    getValue(result, records, record);
-                });
-                if (!records.isEmpty() && !executor.isShutdown()) {
-                    recordsProxy.records(records);
-                    records.clear();
+            @Override
+            protected ObservableList<String> call() throws Exception {
+                consumer = createConsumer();
+                count = new AtomicInteger(1);
+                proceed = true;
+                while (proceed) {
+                    final ConsumerRecords<String, V> consumerRecords =
+                            consumer.poll(Duration.of(5L, ChronoUnit.SECONDS));
+
+                    StringBuilder result = new StringBuilder();
+                    consumerRecords.forEach(record -> {
+                        result.append("================================ Count: ").append(count.getAndIncrement())
+                                .append(" ================================================").append("\n");
+                        getHeaders(result, record);
+                        getKey(result, record);
+                        getRecordValue(result, observableList, record);
+                    });
+                    consumer.commitAsync();
                 }
-                consumer.commitAsync();
+                consumer.close();
+                cancel();
+                return observableList;
             }
-            consumer.close();
-        });
+        };
+    }
+
+    public void startConsumer() {
+        start();
     }
 
     Properties getBaseConsumerProperties() {
@@ -117,7 +122,7 @@ public abstract class AbstractKafkaConsumer<V> {
         return consumerProperties;
     }
 
-    private void getValue(StringBuilder result, List<String> records, ConsumerRecord<String, V> record) {
+    private void getRecordValue(StringBuilder result, ObservableList<String> records, ConsumerRecord<String, V> record) {
         String recordString = getRecordString(record.value());
         if (recordString != null && !recordString.isEmpty()) {
             result.append("Value: ").append(logJson(recordString)).append("\n");
