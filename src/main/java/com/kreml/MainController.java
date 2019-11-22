@@ -61,32 +61,40 @@ public class MainController implements RecordsProxy {
     @FXML
     public void startConsumer(MouseEvent mouseEvent) {
         if (!isConsumerStarted) {
-            String topicName = topicNameField.getText();
-            String brokerAddress = brokerAddressField.getText();
-            if ((topicName != null && !topicName.isEmpty()) && (brokerAddress != null && !brokerAddress.isEmpty())) {
-                if (selectConsumer()) return;
-                kafkaConsumer
-                        .setBrokerAddress(brokerAddress)
-                        .setTopicName(topicName)
-                        .setShouldSeekToEnd(shouldSeekToEndCheckBox.isSelected())
-                        .runConsumer();
-                isConsumerStarted = true;
-                startConsumer.setText("Stop Consumer");
-                shouldSeekToEndCheckBox.setDisable(true);
-                avroTopicCheckBox.setDisable(true);
-                ObservableList<String> items = contentArea.getItems();
-                if (items != null) {
-                    items.clear();
-                }
-            } else {
-                showAlert("Please provide topic name and broker address.");
+            onConsumerStart();
+        } else {
+            onConsumerStop();
+        }
+    }
+
+    private void onConsumerStart() {
+        String topicName = topicNameField.getText();
+        String brokerAddress = brokerAddressField.getText();
+        if ((topicName != null && !topicName.isEmpty()) && (brokerAddress != null && !brokerAddress.isEmpty())) {
+            if (selectConsumer()) return;
+            kafkaConsumer
+                    .setBrokerAddress(brokerAddress)
+                    .setTopicName(topicName)
+                    .setShouldSeekToEnd(shouldSeekToEndCheckBox.isSelected())
+                    .runConsumer();
+            isConsumerStarted = true;
+            startConsumer.setText("Stop Consumer");
+            shouldSeekToEndCheckBox.setDisable(true);
+            avroTopicCheckBox.setDisable(true);
+            ObservableList<String> items = contentArea.getItems();
+            if (items != null) {
+                items.clear();
             }
         } else {
-            startConsumer.setText("Start Consumer");
-            shouldSeekToEndCheckBox.setDisable(false);
-            avroTopicCheckBox.setDisable(false);
-            kafkaConsumer.stopConsumer();
+            showAlert("Please provide topic name and broker address.");
         }
+    }
+
+    private void onConsumerStop() {
+        startConsumer.setText("Start Consumer");
+        shouldSeekToEndCheckBox.setDisable(false);
+        avroTopicCheckBox.setDisable(false);
+        kafkaConsumer.stopConsumer();
     }
 
     /**
