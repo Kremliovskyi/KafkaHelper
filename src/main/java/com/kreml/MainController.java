@@ -84,6 +84,12 @@ public class MainController implements RecordsProxy {
                     .setTopicName(topicName)
                     .setShouldSeekToEnd(shouldSeekToEndCheckBox.isSelected())
                     .startConsumer();
+            kafkaConsumer.setOnCancelled(event -> {
+                startConsumer.setDisable(false);
+                startConsumer.setText("Start Consumer");
+                shouldSeekToEndCheckBox.setDisable(false);
+                avroTopicCheckBox.setDisable(false);
+            });
             isConsumerStarted = true;
             startConsumer.setText("Stop Consumer");
             shouldSeekToEndCheckBox.setDisable(true);
@@ -98,9 +104,7 @@ public class MainController implements RecordsProxy {
     }
 
     private void onConsumerStop() {
-        startConsumer.setText("Start Consumer");
-        shouldSeekToEndCheckBox.setDisable(false);
-        avroTopicCheckBox.setDisable(false);
+        startConsumer.setDisable(true);
         kafkaConsumer.stopConsumer();
         isConsumerStarted = false;
     }
@@ -175,7 +179,7 @@ public class MainController implements RecordsProxy {
             cell.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
                 if (event.getButton().equals(MouseButton.PRIMARY)) {
                     contentArea.requestFocus();
-                    if (! cell.isEmpty()) {
+                    if (!cell.isEmpty()) {
                         int index = cell.getIndex();
                         if (selectionModel.getSelectedIndices().contains(index)) {
                             selectionModel.clearSelection(index);
@@ -191,7 +195,7 @@ public class MainController implements RecordsProxy {
         MenuItem item = new MenuItem("Copy");
         item.setOnAction(event -> {
             StringBuilder clipboardString = new StringBuilder();
-            for (String s : selectionModel.getSelectedItems()){
+            for (String s : selectionModel.getSelectedItems()) {
                 clipboardString.append(s).append("\n");
             }
             final ClipboardContent content = new ClipboardContent();

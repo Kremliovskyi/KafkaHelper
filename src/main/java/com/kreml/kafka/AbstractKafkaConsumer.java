@@ -124,7 +124,7 @@ public abstract class AbstractKafkaConsumer<V> extends Service<ObservableList<St
 
     private void getRecordValue(StringBuilder result, ObservableList<String> records, ConsumerRecord<String, V> record) {
         String recordString = getRecordString(record.value());
-        if (recordString != null && !recordString.isEmpty()) {
+        if (recordString != null && !recordString.isEmpty() && proceed) {
             result.append("Value: ").append(logJson(recordString)).append("\n");
             records.add(result.toString());
             result.setLength(0);
