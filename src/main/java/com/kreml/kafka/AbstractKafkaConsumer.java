@@ -76,7 +76,7 @@ public abstract class AbstractKafkaConsumer<V> {
     }
 
     public void resetCounter() {
-        count.set(0);
+        count.set(1);
     }
 
     public void runConsumer() {
@@ -98,7 +98,6 @@ public abstract class AbstractKafkaConsumer<V> {
                     getValue(result, records, record);
                 });
                 if (!records.isEmpty() && !executor.isShutdown()) {
-//                    System.out.println(records);
                     recordsProxy.records(records);
                     records.clear();
                 }

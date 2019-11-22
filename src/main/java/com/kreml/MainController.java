@@ -95,6 +95,7 @@ public class MainController implements RecordsProxy {
         shouldSeekToEndCheckBox.setDisable(false);
         avroTopicCheckBox.setDisable(false);
         kafkaConsumer.stopConsumer();
+        isConsumerStarted = false;
     }
 
     /**
@@ -141,9 +142,6 @@ public class MainController implements RecordsProxy {
     public void records(List<String> records) {
         ObservableList<String> items = contentArea.getItems();
         items.addAll(records);
-        Platform.runLater(() -> {
-            contentArea.scrollTo(items.size());
-        });
     }
 
     @FXML
