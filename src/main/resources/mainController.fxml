@@ -11,7 +11,7 @@
     <padding>
         <Insets top="20" right="40" bottom="40" left="40"/>
     </padding>
-    <GridPane alignment="center" hgap="10" vgap="10">
+    <GridPane alignment="CENTER_LEFT" hgap="10" vgap="10">
         <padding>
             <Insets top="10" right="10" bottom="10" left="10"/>
         </padding>
@@ -20,14 +20,14 @@
         <TextField fx:id="brokerAddressField" text="10.206.123.31:9092" prefWidth="300" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
         <TextField fx:id="topicNameField" text="metrics.raw" prefWidth="300" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
     </GridPane>
-    <HBox alignment="CENTER" spacing="10">
+    <HBox alignment="CENTER_LEFT" spacing="10">
         <padding>
             <Insets right="10" bottom="10" left="10"/>
         </padding>
         <Button fx:id="startConsumer" text="Start Consumer" GridPane.columnIndex="1" onMouseClicked="#startConsumer"/>
         <CheckBox fx:id="shouldSeekToEndCheckBox" selected="true" text="Seek to end"/>
         <CheckBox fx:id="avroTopicCheckBox" text="Is topic Avro?"/>
-        <TextField fx:id="schemaRegistryTextField" promptText="Schema Registry IP"/>
+        <TextField fx:id="schemaRegistryTextField" prefWidth="230" promptText="Schema Registry IP"/>
     </HBox>
     <ListView fx:id="contentArea" prefWidth="600" prefHeight="800" editable="true" />
     <HBox alignment="TOP_CENTER" >

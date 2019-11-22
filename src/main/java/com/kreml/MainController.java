@@ -70,7 +70,7 @@ public class MainController implements RecordsProxy {
     private void onConsumerStart() {
         String topicName = topicNameField.getText();
         String brokerAddress = brokerAddressField.getText();
-        if ((topicName != null && !topicName.isEmpty()) && (brokerAddress != null && !brokerAddress.isEmpty())) {
+        if ((topicName != null && !topicName.isEmpty()) && validateURL(brokerAddress)) {
             if (selectConsumer()) return;
             kafkaConsumer
                     .setBrokerAddress(brokerAddress)
@@ -104,21 +104,27 @@ public class MainController implements RecordsProxy {
         boolean stop = false;
         if (avroTopicCheckBox.isSelected()) {
             String schemaRegistryIp = schemaRegistryTextField.getText();
-            if (schemaRegistryIp != null) {
-                if (!schemaRegistryIp.startsWith("http")) {
-                    schemaRegistryIp = String.format("http://%1$s", schemaRegistryIp);
-                }
-                if (UrlValidator.getInstance().isValid(schemaRegistryIp)) {
-                    kafkaConsumer = new AvroKafka(this, schemaRegistryIp);
-                } else {
-                    showAlert("Please provide valid Schema Registry URL.");
-                    stop = true;
-                }
+            if (validateURL(schemaRegistryIp)) {
+                kafkaConsumer = new AvroKafka(this, schemaRegistryIp);
+            } else {
+                showAlert("Please provide valid Schema Registry URL.");
+                stop = true;
             }
         } else {
             kafkaConsumer = new StringKafka(this);
         }
         return stop;
+    }
+
+    private boolean validateURL(String urlString) {
+        boolean result = false;
+        if (urlString != null) {
+            if (!urlString.startsWith("http")) {
+                urlString = String.format("http://%1$s", urlString);
+            }
+            result = UrlValidator.getInstance().isValid(urlString);
+        }
+        return result;
     }
 
     private void showAlert(String text) {
