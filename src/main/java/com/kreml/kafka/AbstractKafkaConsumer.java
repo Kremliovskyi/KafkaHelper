@@ -98,7 +98,7 @@ public abstract class AbstractKafkaConsumer<V> {
                     getValue(result, records, record);
                 });
                 if (!records.isEmpty() && !executor.isShutdown()) {
-                    System.out.println(records);
+//                    System.out.println(records);
                     recordsProxy.records(records);
                     records.clear();
                 }

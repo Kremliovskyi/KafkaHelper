@@ -1,6 +1,7 @@
 package com.kreml;
 
 import com.kreml.kafka.AbstractKafkaConsumer;
+import com.kreml.kafka.AvroKafka;
 import com.kreml.kafka.StringKafka;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -19,6 +20,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import org.apache.commons.validator.routines.UrlValidator;
 
 import java.util.List;
 
@@ -33,9 +35,13 @@ public class MainController implements RecordsProxy {
     @FXML
     public Button startConsumer;
     @FXML
+    public TextField schemaRegistryTextField;
+    @FXML
+    public CheckBox avroTopicCheckBox;
+    @FXML
     private ListView<String> contentArea;
 
-    private AbstractKafkaConsumer stringKafka = new StringKafka(this);
+    private AbstractKafkaConsumer kafkaConsumer;
     private boolean isConsumerStarted;
 
     public MainController() {
@@ -44,21 +50,30 @@ public class MainController implements RecordsProxy {
     @FXML
     public void initialize() {
         initContentArea();
+        schemaRegistryTextField.managedProperty().bind(schemaRegistryTextField.visibleProperty());
+        schemaRegistryTextField.setVisible(false);
+        schemaRegistryTextField.visibleProperty().bind(avroTopicCheckBox.selectedProperty());
+        avroTopicCheckBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            schemaRegistryTextField.clear();
+        });
     }
 
     @FXML
     public void startConsumer(MouseEvent mouseEvent) {
-        if (isConsumerStarted = !isConsumerStarted) {
+        if (!isConsumerStarted) {
             String topicName = topicNameField.getText();
             String brokerAddress = brokerAddressField.getText();
             if ((topicName != null && !topicName.isEmpty()) && (brokerAddress != null && !brokerAddress.isEmpty())) {
-                stringKafka
+                if (selectConsumer()) return;
+                kafkaConsumer
                         .setBrokerAddress(brokerAddress)
                         .setTopicName(topicName)
                         .setShouldSeekToEnd(shouldSeekToEndCheckBox.isSelected())
                         .runConsumer();
+                isConsumerStarted = true;
                 startConsumer.setText("Stop Consumer");
                 shouldSeekToEndCheckBox.setDisable(true);
+                avroTopicCheckBox.setDisable(true);
                 ObservableList<String> items = contentArea.getItems();
                 if (items != null) {
                     items.clear();
@@ -69,12 +84,36 @@ public class MainController implements RecordsProxy {
         } else {
             startConsumer.setText("Start Consumer");
             shouldSeekToEndCheckBox.setDisable(false);
-            stringKafka.stopConsumer();
+            avroTopicCheckBox.setDisable(false);
+            kafkaConsumer.stopConsumer();
         }
-
     }
 
-    public void showAlert(String text) {
+    /**
+     * @return true if consumer was selected.
+     */
+    private boolean selectConsumer() {
+        boolean stop = false;
+        if (avroTopicCheckBox.isSelected()) {
+            String schemaRegistryIp = schemaRegistryTextField.getText();
+            if (schemaRegistryIp != null) {
+                if (!schemaRegistryIp.startsWith("http")) {
+                    schemaRegistryIp = String.format("http://%1$s", schemaRegistryIp);
+                }
+                if (UrlValidator.getInstance().isValid(schemaRegistryIp)) {
+                    kafkaConsumer = new AvroKafka(this, schemaRegistryIp);
+                } else {
+                    showAlert("Please provide valid Schema Registry URL.");
+                    stop = true;
+                }
+            }
+        } else {
+            kafkaConsumer = new StringKafka(this);
+        }
+        return stop;
+    }
+
+    private void showAlert(String text) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.INFORMATION);
             alert.setTitle("Information");
@@ -103,11 +142,10 @@ public class MainController implements RecordsProxy {
         contentArea.getSelectionModel().clearSelection();
     }
 
-
     @FXML
     public void clear(MouseEvent mouseEvent) {
         contentArea.getItems().clear();
-        stringKafka.resetCounter();
+        kafkaConsumer.resetCounter();
     }
 
     private void initContentArea() {
