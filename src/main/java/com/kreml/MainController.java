@@ -1,5 +1,6 @@
 package com.kreml;
 
+import com.kreml.kafka.AbstractKafkaConsumer;
 import com.kreml.kafka.StringKafka;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -21,7 +22,7 @@ import javafx.scene.input.MouseEvent;
 
 import java.util.List;
 
-public class StringTopicController implements RecordsProxy {
+public class MainController implements RecordsProxy {
 
     @FXML
     public TextField topicNameField;
@@ -33,10 +34,11 @@ public class StringTopicController implements RecordsProxy {
     public Button startConsumer;
     @FXML
     private ListView<String> contentArea;
-    private StringKafka stringKafka = new StringKafka(this);
+
+    private AbstractKafkaConsumer stringKafka = new StringKafka(this);
     private boolean isConsumerStarted;
 
-    public StringTopicController() {
+    public MainController() {
     }
 
     @FXML
@@ -105,6 +107,7 @@ public class StringTopicController implements RecordsProxy {
     @FXML
     public void clear(MouseEvent mouseEvent) {
         contentArea.getItems().clear();
+        stringKafka.resetCounter();
     }
 
     private void initContentArea() {
