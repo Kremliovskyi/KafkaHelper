@@ -26,9 +26,8 @@ import javafx.scene.input.MouseEvent;
 import org.apache.commons.validator.routines.UrlValidator;
 
 import java.util.ArrayList;
-import java.util.List;
 
-public class MainController implements RecordsProxy {
+public class MainController {
 
     @FXML
     public TextField topicNameField;
@@ -147,12 +146,6 @@ public class MainController implements RecordsProxy {
             alert.setContentText(text);
             alert.showAndWait();
         });
-    }
-
-    @Override
-    public void records(List<String> records) {
-        ObservableList<String> items = contentArea.getItems();
-        items.addAll(records);
     }
 
     @FXML
