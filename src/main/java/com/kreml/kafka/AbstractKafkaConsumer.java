@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
@@ -18,12 +19,14 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import java.io.CharArrayReader;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class AbstractKafkaConsumer<V> extends Service<ObservableList<String>> {
+public abstract class AbstractKafkaConsumer<V> extends Service<Void> {
 
     private static final String CONSUMER_GROUP_ID = "1";
     private KafkaConsumer<String, V> consumer;
@@ -79,11 +82,11 @@ public abstract class AbstractKafkaConsumer<V> extends Service<ObservableList<St
     }
 
     @Override
-    protected Task<ObservableList<String>> createTask() {
-        return new Task<ObservableList<String>>() {
+    protected Task<Void> createTask() {
+        return new Task<Void>() {
 
             @Override
-            protected ObservableList<String> call() throws Exception {
+            protected Void call() {
                 consumer = createConsumer();
                 count = new AtomicInteger(1);
                 proceed = true;
@@ -92,18 +95,27 @@ public abstract class AbstractKafkaConsumer<V> extends Service<ObservableList<St
                             consumer.poll(Duration.of(5L, ChronoUnit.SECONDS));
 
                     StringBuilder result = new StringBuilder();
+                    List<String> resultList = new ArrayList<>();
                     consumerRecords.forEach(record -> {
                         result.append("================================ Count: ").append(count.getAndIncrement())
                                 .append(" ================================================").append("\n");
                         getHeaders(result, record);
                         getKey(result, record);
-                        getRecordValue(result, observableList, record);
+                        getRecordValue(result, record);
+                        resultList.add(result.toString());
+                        result.setLength(0);
                     });
+                    if (!resultList.isEmpty() && proceed) {
+                        List<String> tempList = new ArrayList<>(resultList);
+                        Platform.runLater(() -> {
+                            observableList.addAll(tempList);
+                        });
+                    }
                     consumer.commitAsync();
                 }
                 consumer.close();
                 cancel();
-                return observableList;
+                return null;
             }
         };
     }
@@ -122,12 +134,10 @@ public abstract class AbstractKafkaConsumer<V> extends Service<ObservableList<St
         return consumerProperties;
     }
 
-    private void getRecordValue(StringBuilder result, ObservableList<String> records, ConsumerRecord<String, V> record) {
+    private void getRecordValue(StringBuilder result, ConsumerRecord<String, V> record) {
         String recordString = getRecordString(record.value());
-        if (recordString != null && !recordString.isEmpty() && proceed) {
+        if (recordString != null && !recordString.isEmpty()) {
             result.append("Value: ").append(logJson(recordString)).append("\n");
-            records.add(result.toString());
-            result.setLength(0);
         }
     }
 
