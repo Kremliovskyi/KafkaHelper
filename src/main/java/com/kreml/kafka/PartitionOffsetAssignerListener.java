@@ -3,11 +3,15 @@ package com.kreml.kafka;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 public class PartitionOffsetAssignerListener implements ConsumerRebalanceListener {
+
+    private final Logger logger = LogManager.getLogger();
 
     private KafkaConsumer consumer;
     private boolean shouldSeekToEnd;
@@ -29,7 +33,7 @@ public class PartitionOffsetAssignerListener implements ConsumerRebalanceListene
             assignedPartitions.addAll(partitions);
         } else {
             if (partitions.removeAll(assignedPartitions)) {
-                System.out.println("partitions.removeAll(assignedPartitions) is success");
+                logger.warn("Duplicate partitions were reassigned.");
             }
             assignedPartitions.addAll(partitions);
         }

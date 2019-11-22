@@ -15,6 +15,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.CharArrayReader;
 import java.time.Duration;
@@ -27,6 +29,8 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class AbstractKafkaConsumer<V> extends Service<Void> {
+
+    private final Logger logger = LogManager.getLogger();
 
     private static final String CONSUMER_GROUP_ID = "1";
     private KafkaConsumer<String, V> consumer;
@@ -114,6 +118,7 @@ public abstract class AbstractKafkaConsumer<V> extends Service<Void> {
                     consumer.commitAsync();
                 }
                 consumer.close();
+                logger.info("Consumer is stopped.");
                 cancel();
                 return null;
             }
