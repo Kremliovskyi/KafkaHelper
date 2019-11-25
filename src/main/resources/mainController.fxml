@@ -15,10 +15,10 @@
         <padding>
             <Insets top="10" right="10" bottom="10" left="10"/>
         </padding>
-        <Label text="Broker Address:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <Label text="Bootstrap servers:" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
         <Label text="Topic Name:" GridPane.columnIndex="1" GridPane.rowIndex="0"/>
-        <TextField fx:id="brokerAddressField" text="10.206.123.31:9092" prefWidth="300" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
-        <TextField fx:id="topicNameField" text="metrics.raw" prefWidth="300" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+        <TextField fx:id="brokerAddressesField" text="10.206.123.31:9092, 10.206.123.32:9092, 10.206.123.33:9092" prefWidth="450" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <TextField fx:id="topicNameField" text="metrics.raw" prefWidth="450" GridPane.columnIndex="1" GridPane.rowIndex="1"/>
     </GridPane>
     <HBox alignment="CENTER_LEFT" spacing="10">
         <padding>

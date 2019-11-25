@@ -26,13 +26,14 @@ import javafx.scene.input.MouseEvent;
 import org.apache.commons.validator.routines.UrlValidator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MainController {
 
     @FXML
     public TextField topicNameField;
     @FXML
-    public TextField brokerAddressField;
+    public TextField brokerAddressesField;
     @FXML
     public CheckBox shouldSeekToEndCheckBox;
     @FXML
@@ -62,6 +63,7 @@ public class MainController {
             schemaRegistryTextField.clear();
         });
         contentArea.itemsProperty().bind(stringListProperty);
+        Platform.runLater(() -> contentArea.requestFocus());
     }
 
     @FXML
@@ -75,11 +77,11 @@ public class MainController {
 
     private void onConsumerStart() {
         String topicName = topicNameField.getText();
-        String brokerAddress = brokerAddressField.getText();
-        if ((topicName != null && !topicName.isEmpty()) && validateURL(brokerAddress)) {
+        String brokerAddresses = brokerAddressesField.getText();
+        if ((topicName != null && !topicName.isEmpty()) && validateBrokersAddresses(brokerAddresses)) {
             if (selectConsumer()) return;
             kafkaConsumer
-                    .setBrokerAddress(brokerAddress)
+                    .setBrokerAddresses(brokerAddresses)
                     .setTopicName(topicName)
                     .setShouldSeekToEnd(shouldSeekToEndCheckBox.isSelected())
                     .startConsumer();
@@ -98,7 +100,7 @@ public class MainController {
                 items.clear();
             }
         } else {
-            showAlert("Please provide topic name and broker address.");
+            showAlert("Please provide topic name and bootstrap servers separated with , or ;");
         }
     }
 
@@ -134,6 +136,15 @@ public class MainController {
                 urlString = String.format("http://%1$s", urlString);
             }
             result = UrlValidator.getInstance().isValid(urlString);
+        }
+        return result;
+    }
+
+    private boolean validateBrokersAddresses(String addresses){
+        boolean result = false;
+        if (addresses != null && !addresses.isEmpty()) {
+            String[] addressesArray = addresses.split("[,;]+");
+            result = Arrays.stream(addressesArray).allMatch(s -> validateURL(s.trim()));
         }
         return result;
     }

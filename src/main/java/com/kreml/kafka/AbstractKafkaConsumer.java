@@ -34,7 +34,7 @@ public abstract class AbstractKafkaConsumer<V> extends Service<Void> {
 
     private static final String CONSUMER_GROUP_ID = "1";
     private KafkaConsumer<String, V> consumer;
-    private String brokerAddress;
+    private String brokerAddresses;
     private String topicName;
     private boolean shouldSeekToEnd;
     private AtomicInteger count = new AtomicInteger(1);
@@ -49,12 +49,12 @@ public abstract class AbstractKafkaConsumer<V> extends Service<Void> {
         this.observableList = observableList;
     }
 
-    public String getBrokerAddress() {
-        return brokerAddress;
+    public String getBrokerAddresses() {
+        return brokerAddresses;
     }
 
-    public AbstractKafkaConsumer<V> setBrokerAddress(String brokerAddress) {
-        this.brokerAddress = brokerAddress;
+    public AbstractKafkaConsumer<V> setBrokerAddresses(String brokerAddresses) {
+        this.brokerAddresses = brokerAddresses;
         return this;
     }
 
@@ -131,7 +131,7 @@ public abstract class AbstractKafkaConsumer<V> extends Service<Void> {
 
     Properties getBaseConsumerProperties() {
         Properties consumerProperties = new Properties();
-        consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, getBrokerAddress());
+        consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, getBrokerAddresses());
         consumerProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, CONSUMER_GROUP_ID);
         consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, shouldSeekToEnd() ? OffsetResetStrategy.LATEST.name().toLowerCase() :
