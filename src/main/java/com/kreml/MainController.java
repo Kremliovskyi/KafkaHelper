@@ -90,9 +90,13 @@ public class MainController {
                 startConsumer.setText("Start Consumer");
                 shouldSeekToEndCheckBox.setDisable(false);
                 avroTopicCheckBox.setDisable(false);
+                brokerAddressesField.setDisable(false);
+                topicNameField.setDisable(false);
             });
             isConsumerStarted = true;
             startConsumer.setText("Stop Consumer");
+            brokerAddressesField.setDisable(true);
+            topicNameField.setDisable(true);
             shouldSeekToEndCheckBox.setDisable(true);
             avroTopicCheckBox.setDisable(true);
             ObservableList<String> items = contentArea.getItems();
