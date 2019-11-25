@@ -92,6 +92,7 @@ public class MainController {
                 avroTopicCheckBox.setDisable(false);
                 brokerAddressesField.setDisable(false);
                 topicNameField.setDisable(false);
+                schemaRegistryTextField.setDisable(false);
             });
             isConsumerStarted = true;
             startConsumer.setText("Stop Consumer");
@@ -99,6 +100,7 @@ public class MainController {
             topicNameField.setDisable(true);
             shouldSeekToEndCheckBox.setDisable(true);
             avroTopicCheckBox.setDisable(true);
+            schemaRegistryTextField.setDisable(true);
             ObservableList<String> items = contentArea.getItems();
             if (items != null) {
                 items.clear();
