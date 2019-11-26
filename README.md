@@ -1,0 +1,1 @@
+JavaFX app that currently supports only consuming records from Apache Kafka. It suports both String and Avro desirializers. Values are pretty printed as json. Second iteration is planned to have producer.
