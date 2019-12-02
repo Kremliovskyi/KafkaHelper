@@ -42,6 +42,5 @@ public class PartitionOffsetAssignerListener implements ConsumerRebalanceListene
         } else {
             consumer.seekToBeginning(partitions);
         }
-
     }
 }

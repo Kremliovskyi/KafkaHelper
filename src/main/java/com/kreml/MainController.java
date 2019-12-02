@@ -37,7 +37,7 @@ public class MainController {
     @FXML
     public CheckBox shouldSeekToEndCheckBox;
     @FXML
-    public Button startConsumer;
+    public Button startConsumers;
     @FXML
     public TextField schemaRegistryTextField;
     @FXML
@@ -67,7 +67,7 @@ public class MainController {
     }
 
     @FXML
-    public void startConsumer(MouseEvent mouseEvent) {
+    public void startConsumers(MouseEvent mouseEvent) {
         if (!isConsumerStarted) {
             onConsumerStart();
         } else {
@@ -84,10 +84,10 @@ public class MainController {
                     .setBrokerAddresses(brokerAddresses)
                     .setTopicName(topicName)
                     .setShouldSeekToEnd(shouldSeekToEndCheckBox.isSelected())
-                    .startConsumer();
-            kafkaConsumer.setOnCancelled(event -> {
-                startConsumer.setDisable(false);
-                startConsumer.setText("Start Consumer");
+                    .runConsumer();
+            kafkaConsumer.setOnCancelled(() -> {
+                startConsumers.setDisable(false);
+                startConsumers.setText("Start Consumers");
                 shouldSeekToEndCheckBox.setDisable(false);
                 avroTopicCheckBox.setDisable(false);
                 brokerAddressesField.setDisable(false);
@@ -95,7 +95,7 @@ public class MainController {
                 schemaRegistryTextField.setDisable(false);
             });
             isConsumerStarted = true;
-            startConsumer.setText("Stop Consumer");
+            startConsumers.setText("Stop Consumers");
             brokerAddressesField.setDisable(true);
             topicNameField.setDisable(true);
             shouldSeekToEndCheckBox.setDisable(true);
@@ -111,7 +111,7 @@ public class MainController {
     }
 
     private void onConsumerStop() {
-        startConsumer.setDisable(true);
+        startConsumers.setDisable(true);
         kafkaConsumer.stopConsumer();
         isConsumerStarted = false;
     }

@@ -24,7 +24,7 @@
         <padding>
             <Insets right="10" bottom="10" left="10"/>
         </padding>
-        <Button fx:id="startConsumer" text="Start Consumer" GridPane.columnIndex="1" onMouseClicked="#startConsumer"/>
+        <Button fx:id="startConsumers" text="Start Consumers" GridPane.columnIndex="1" onMouseClicked="#startConsumers"/>
         <CheckBox fx:id="shouldSeekToEndCheckBox" selected="true" text="Seek to end"/>
         <CheckBox fx:id="avroTopicCheckBox" text="Is topic Avro?"/>
         <TextField fx:id="schemaRegistryTextField" prefWidth="230" promptText="Schema Registry IP"/>

@@ -7,8 +7,6 @@ import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Service;
-import javafx.concurrent.Task;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -26,20 +24,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class AbstractKafkaConsumer<V> extends Service<Void> {
+public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
 
     private final Logger logger = LogManager.getLogger();
 
-    private static final String CONSUMER_GROUP_ID = "1";
-    private KafkaConsumer<String, V> consumer;
+    private static final String CONSUMER_GROUP_ID = "47e0a0b5-35dd-4522-8b5f-718dc9eef1fa-47e0a0b5-35dd-4522-8b5f-718dc9eef1fa";
+    private static final int CONSUMERS_COUNT = 3;
     private String brokerAddresses;
     private String topicName;
     private boolean shouldSeekToEnd;
     private AtomicInteger count = new AtomicInteger(1);
-    private boolean proceed;
+    private AtomicBoolean proceed = new AtomicBoolean(true);
+    private AtomicInteger onCancelRunTimes = new AtomicInteger();
     private ObservableList<String> observableList;
+    private ExecutorService executor;
+    private Runnable onCancel;
 
     abstract KafkaConsumer<String, V> createConsumer();
 
@@ -77,7 +81,8 @@ public abstract class AbstractKafkaConsumer<V> extends Service<Void> {
     }
 
     public void stopConsumer() {
-        proceed = false;
+        proceed.set(false);
+        executor.shutdown();
     }
 
     public void resetList() {
@@ -85,48 +90,52 @@ public abstract class AbstractKafkaConsumer<V> extends Service<Void> {
         observableList.clear();
     }
 
-    @Override
-    protected Task<Void> createTask() {
-        return new Task<Void>() {
+    public void runConsumer() {
+        executor = Executors.newFixedThreadPool(3);
+        count = new AtomicInteger(1);
+        proceed.set(true);
+        onCancelRunTimes.set(0);
+        for (int i = 0; i < CONSUMERS_COUNT; i++) {
+            executor.submit(getFetchingRunnable());
+        }
+    }
 
-            @Override
-            protected Void call() {
-                consumer = createConsumer();
-                count = new AtomicInteger(1);
-                proceed = true;
-                while (proceed) {
-                    final ConsumerRecords<String, V> consumerRecords =
-                            consumer.poll(Duration.of(5L, ChronoUnit.SECONDS));
+    private Runnable getFetchingRunnable() {
+        return () -> {
+            KafkaConsumer<String, V> consumer = createConsumer();
+            while (proceed.get()) {
+                final ConsumerRecords<String, V> consumerRecords =
+                        consumer.poll(Duration.of(3L, ChronoUnit.SECONDS));
 
-                    StringBuilder result = new StringBuilder();
-                    List<String> resultList = new ArrayList<>();
-                    consumerRecords.forEach(record -> {
-                        result.append("================================ Count: ").append(count.getAndIncrement())
-                                .append(" ================================================").append("\n");
-                        getHeaders(result, record);
-                        getKey(result, record);
-                        getRecordValue(result, record);
-                        resultList.add(result.toString());
-                        result.setLength(0);
+                StringBuilder result = new StringBuilder();
+                List<String> resultList = new ArrayList<>();
+                consumerRecords.forEach(record -> {
+                    result.append("================================ Count: ").append(count.getAndIncrement())
+                            .append(" ================================================").append("\n");
+                    getHeaders(result, record);
+                    getKey(result, record);
+                    getRecordValue(result, record);
+                    resultList.add(result.toString());
+                    result.setLength(0);
+                });
+                if (!resultList.isEmpty() && proceed.get()) {
+                    List<String> tempList = new ArrayList<>(resultList);
+                    Platform.runLater(() -> {
+                        observableList.addAll(tempList);
                     });
-                    if (!resultList.isEmpty() && proceed) {
-                        List<String> tempList = new ArrayList<>(resultList);
-                        Platform.runLater(() -> {
-                            observableList.addAll(tempList);
-                        });
-                    }
                     consumer.commitAsync();
                 }
-                consumer.close();
-                logger.info("Consumer is stopped.");
-                cancel();
-                return null;
             }
+            consumer.close();
+            logger.info("Consumer is stopped.");
+            runOnCancel();
         };
     }
 
-    public void startConsumer() {
-        start();
+    private void runOnCancel() {
+        if (onCancelRunTimes.incrementAndGet() == CONSUMERS_COUNT) {
+            Platform.runLater(onCancel);
+        }
     }
 
     Properties getBaseConsumerProperties() {
@@ -172,4 +181,8 @@ public abstract class AbstractKafkaConsumer<V> extends Service<Void> {
         return gson.toJson(je);
     }
 
+    @Override
+    public void setOnCancelled(Runnable runnable) {
+        onCancel = runnable;
+    }
 }
