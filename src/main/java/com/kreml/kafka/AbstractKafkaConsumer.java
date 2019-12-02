@@ -12,6 +12,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
+import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,7 +47,7 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
     private ObservableList<String> observableList;
     private ExecutorService executor;
     private Runnable onCancel;
-    private CountDownLatch waitForConsumers = new CountDownLatch(CONSUMERS_COUNT);
+    private List<KafkaConsumer<String, V>> consumerList = new ArrayList<>();
 
     abstract KafkaConsumer<String, V> createConsumer();
 
@@ -86,6 +86,11 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
 
     public void stopConsumer() {
         proceed.set(false);
+        consumerList.forEach(stringVKafkaConsumer -> {
+            if (stringVKafkaConsumer != null) {
+                stringVKafkaConsumer.wakeup();
+            }
+        });
         executor.shutdown();
     }
 
@@ -107,38 +112,39 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
     private Runnable getFetchingRunnable() {
         return () -> {
             KafkaConsumer<String, V> consumer = createConsumer();
-            while (proceed.get()) {
-                final ConsumerRecords<String, V> consumerRecords =
-                        consumer.poll(Duration.ofMillis(500L));
-
-                StringBuilder result = new StringBuilder();
-                List<String> resultList = new ArrayList<>();
-                consumerRecords.forEach(record -> {
-                    result.append("================================ Count: ").append(count.getAndIncrement())
-                            .append(" ================================================").append("\n");
-                    getHeaders(result, record);
-                    getKey(result, record);
-                    getRecordValue(result, record);
-                    resultList.add(result.toString());
-                    result.setLength(0);
-                });
-                if (!resultList.isEmpty() && proceed.get()) {
-                    List<String> tempList = new ArrayList<>(resultList);
-                    Platform.runLater(() -> {
-                        observableList.addAll(tempList);
-                    });
-                    consumer.commitAsync();
-                }
-            }
-            waitForConsumers.countDown();
+            consumerList.add(consumer);
             try {
-                waitForConsumers.await();
-            } catch (InterruptedException e) {
-                logger.error(e.getMessage());
+            while (proceed.get()) {
+
+                    final ConsumerRecords<String, V> consumerRecords =
+                            consumer.poll(Duration.ofMillis(500L));
+
+                    StringBuilder result = new StringBuilder();
+                    List<String> resultList = new ArrayList<>();
+                    consumerRecords.forEach(record -> {
+                        result.append("================================ Count: ").append(count.getAndIncrement())
+                                .append(" ================================================").append("\n");
+                        getHeaders(result, record);
+                        getKey(result, record);
+                        getRecordValue(result, record);
+                        resultList.add(result.toString());
+                        result.setLength(0);
+                    });
+                    if (!resultList.isEmpty() && proceed.get()) {
+                        List<String> tempList = new ArrayList<>(resultList);
+                        Platform.runLater(() -> {
+                            observableList.addAll(tempList);
+                        });
+                        consumer.commitAsync();
+                    }
             }
-            consumer.close();
-            logger.info("Consumer is stopped.");
-            runOnCancel();
+            } catch (WakeupException e) {
+                if (proceed.get()) throw e;
+            } finally {
+                consumer.close();
+                logger.info("Consumer is stopped.");
+                runOnCancel();
+            }
         };
     }
 
@@ -152,9 +158,9 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
         Properties consumerProperties = new Properties();
         consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, getBrokerAddresses());
         consumerProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, getUniqueGroupID());
-        consumerProperties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 90000);
-        consumerProperties.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 300000000);
+        consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "42ea04f6-0dfe-4b67-a33a-8a4f3b00ea3f");
+//        consumerProperties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 90000);
+//        consumerProperties.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 300000000);
         consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, shouldSeekToEnd() ? OffsetResetStrategy.LATEST.name().toLowerCase() :
                 OffsetResetStrategy.EARLIEST.name().toLowerCase());
         return consumerProperties;
