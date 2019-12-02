@@ -17,12 +17,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.CharArrayReader;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -32,7 +37,6 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
 
     private final Logger logger = LogManager.getLogger();
 
-    private static final String CONSUMER_GROUP_ID = "47e0a0b5-35dd-4522-8b5f-718dc9eef1fa-47e0a0b5-35dd-4522-8b5f-718dc9eef1fa";
     private static final int CONSUMERS_COUNT = 3;
     private String brokerAddresses;
     private String topicName;
@@ -43,6 +47,7 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
     private ObservableList<String> observableList;
     private ExecutorService executor;
     private Runnable onCancel;
+    private CountDownLatch waitForConsumers = new CountDownLatch(CONSUMERS_COUNT);
 
     abstract KafkaConsumer<String, V> createConsumer();
 
@@ -104,7 +109,7 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
             KafkaConsumer<String, V> consumer = createConsumer();
             while (proceed.get()) {
                 final ConsumerRecords<String, V> consumerRecords =
-                        consumer.poll(Duration.ofMillis(300L));
+                        consumer.poll(Duration.ofMillis(500L));
 
                 StringBuilder result = new StringBuilder();
                 List<String> resultList = new ArrayList<>();
@@ -125,6 +130,12 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
                     consumer.commitAsync();
                 }
             }
+            waitForConsumers.countDown();
+            try {
+                waitForConsumers.await();
+            } catch (InterruptedException e) {
+                logger.error(e.getMessage());
+            }
             consumer.close();
             logger.info("Consumer is stopped.");
             runOnCancel();
@@ -141,10 +152,24 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
         Properties consumerProperties = new Properties();
         consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, getBrokerAddresses());
         consumerProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, CONSUMER_GROUP_ID);
+        consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, getUniqueGroupID());
+        consumerProperties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 90000);
+        consumerProperties.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 300000000);
         consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, shouldSeekToEnd() ? OffsetResetStrategy.LATEST.name().toLowerCase() :
                 OffsetResetStrategy.EARLIEST.name().toLowerCase());
         return consumerProperties;
+    }
+
+    private String getUniqueGroupID() {
+        String groupID;
+        try {
+            InetAddress ip = InetAddress.getLocalHost();
+            groupID = Base64.getEncoder().encodeToString(ip.getHostName().getBytes());
+        } catch (UnknownHostException e) {
+            logger.error(e.getMessage());
+            groupID = UUID.randomUUID().toString();
+        }
+        return groupID;
     }
 
     private void getRecordValue(StringBuilder result, ConsumerRecord<String, V> record) {
