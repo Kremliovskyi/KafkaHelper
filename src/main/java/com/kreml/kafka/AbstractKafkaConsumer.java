@@ -18,7 +18,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.CharArrayReader;
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -105,7 +104,7 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
             KafkaConsumer<String, V> consumer = createConsumer();
             while (proceed.get()) {
                 final ConsumerRecords<String, V> consumerRecords =
-                        consumer.poll(Duration.of(3L, ChronoUnit.SECONDS));
+                        consumer.poll(Duration.ofMillis(300L));
 
                 StringBuilder result = new StringBuilder();
                 List<String> resultList = new ArrayList<>();
