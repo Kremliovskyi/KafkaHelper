@@ -15,7 +15,7 @@ public class PartitionOffsetAssignerListener implements ConsumerRebalanceListene
 
     private KafkaConsumer consumer;
     private boolean shouldSeekToEnd;
-    private Collection<TopicPartition> assignedPartitions = new ArrayList<>();
+    private static Collection<TopicPartition> assignedPartitions = new ArrayList<>();
 
     PartitionOffsetAssignerListener(KafkaConsumer kafkaConsumer, boolean shouldSeekToEnd) {
         this.consumer = kafkaConsumer;

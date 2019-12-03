@@ -115,7 +115,6 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
             consumerList.add(consumer);
             try {
             while (proceed.get()) {
-
                     final ConsumerRecords<String, V> consumerRecords =
                             consumer.poll(Duration.ofMillis(500L));
 
@@ -158,9 +157,7 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
         Properties consumerProperties = new Properties();
         consumerProperties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, getBrokerAddresses());
         consumerProperties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-        consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "42ea04f6-0dfe-4b67-a33a-8a4f3b00ea3f");
-//        consumerProperties.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 90000);
-//        consumerProperties.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG, 300000000);
+        consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, getUniqueGroupID());
         consumerProperties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, shouldSeekToEnd() ? OffsetResetStrategy.LATEST.name().toLowerCase() :
                 OffsetResetStrategy.EARLIEST.name().toLowerCase());
         return consumerProperties;
@@ -203,12 +200,18 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
     }
 
     private String logJson(String JSONString) {
-        Gson gson = new GsonBuilder().setPrettyPrinting().setLenient().create();
-        JsonReader r = new JsonReader(new CharArrayReader(JSONString.toCharArray()));
-        r.setLenient(true);
-        JsonParser jp = new JsonParser();
-        JsonElement je = jp.parse(r);
-        return gson.toJson(je);
+        String result;
+        try{
+            Gson gson = new GsonBuilder().setPrettyPrinting().setLenient().create();
+            JsonReader r = new JsonReader(new CharArrayReader(JSONString.toCharArray()));
+            r.setLenient(true);
+            JsonParser jp = new JsonParser();
+            JsonElement je = jp.parse(r);
+            result = gson.toJson(je);
+        } catch (Throwable t) {
+            result = JSONString;
+        }
+        return result;
     }
 
     @Override
