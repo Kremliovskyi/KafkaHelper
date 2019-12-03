@@ -3,15 +3,15 @@ package com.kreml.kafka;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 public class PartitionOffsetAssignerListener implements ConsumerRebalanceListener {
 
-    private final Logger logger = LogManager.getLogger();
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private KafkaConsumer consumer;
     private boolean shouldSeekToEnd;

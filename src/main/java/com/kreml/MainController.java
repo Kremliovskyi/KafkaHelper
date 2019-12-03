@@ -24,11 +24,18 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import org.apache.commons.validator.routines.UrlValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.awt.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class MainController {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @FXML
     public TextField topicNameField;
@@ -42,6 +49,8 @@ public class MainController {
     public TextField schemaRegistryTextField;
     @FXML
     public CheckBox avroTopicCheckBox;
+    @FXML
+    public Button seeLogs;
     @FXML
     private ListView<String> contentArea;
 
@@ -215,5 +224,19 @@ public class MainController {
         ContextMenu menu = new ContextMenu();
         menu.getItems().add(item);
         contentArea.setContextMenu(menu);
+    }
+
+    @FXML
+    public void openLogs(MouseEvent mouseEvent) {
+        File tempDir = new File(System.getProperty("java.io.tmpdir"));
+        File logFile = new File(tempDir, "/logs/kafka-debug.log");
+        if (logFile.exists()) {
+            Desktop dt = Desktop.getDesktop();
+            try {
+                dt.open(logFile);
+            } catch (IOException e) {
+                logger.error(e.getMessage());
+            }
+        }
     }
 }

@@ -14,8 +14,8 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.CharArrayReader;
 import java.net.InetAddress;
@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
 
-    private final Logger logger = LogManager.getLogger();
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private static final int CONSUMERS_COUNT = 3;
     private String brokerAddresses;
