@@ -1,8 +1,8 @@
 package com.kreml;
 
-import com.kreml.kafka.AbstractKafkaConsumer;
-import com.kreml.kafka.AvroKafka;
-import com.kreml.kafka.StringKafka;
+import com.kreml.kafka.AbstractKafkaConsumerGroup;
+import com.kreml.kafka.AvroKafkaConsumerGroup;
+import com.kreml.kafka.StringKafkaConsumerGroup;
 import javafx.application.Platform;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
@@ -54,7 +54,7 @@ public class MainController {
     @FXML
     private ListView<String> contentArea;
 
-    private AbstractKafkaConsumer<?> kafkaConsumer;
+    private AbstractKafkaConsumerGroup<?> kafkaConsumer;
     private boolean isConsumerStarted;
     private ObservableList<String> observableList = FXCollections.observableList(new ArrayList<>());
     private ListProperty<String> stringListProperty = new SimpleListProperty<>(observableList);
@@ -133,13 +133,13 @@ public class MainController {
         if (avroTopicCheckBox.isSelected()) {
             String schemaRegistryIp = schemaRegistryTextField.getText();
             if (validateURL(schemaRegistryIp)) {
-                kafkaConsumer = new AvroKafka(observableList, schemaRegistryIp);
+                kafkaConsumer = new AvroKafkaConsumerGroup(observableList, schemaRegistryIp);
             } else {
                 showAlert("Please provide valid Schema Registry URL.");
                 stop = true;
             }
         } else {
-            kafkaConsumer = new StringKafka(observableList);
+            kafkaConsumer = new StringKafkaConsumerGroup(observableList);
         }
         return stop;
     }

@@ -18,11 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.CharArrayReader;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +30,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
+public abstract class AbstractKafkaConsumerGroup<V> implements OnCancelListener {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -48,12 +45,13 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
     private ExecutorService executor;
     private Runnable onCancel;
     private List<KafkaConsumer<String, V>> consumerList = new ArrayList<>();
+    private static UUID groupId = UUID.randomUUID();
 
     abstract KafkaConsumer<String, V> createConsumer();
 
     abstract String getRecordString(V value);
 
-    AbstractKafkaConsumer(ObservableList<String> observableList) {
+    AbstractKafkaConsumerGroup(ObservableList<String> observableList) {
         this.observableList = observableList;
     }
 
@@ -61,12 +59,12 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
         return brokerAddresses;
     }
 
-    public AbstractKafkaConsumer<V> setBrokerAddresses(String brokerAddresses) {
+    public AbstractKafkaConsumerGroup<V> setBrokerAddresses(String brokerAddresses) {
         this.brokerAddresses = brokerAddresses;
         return this;
     }
 
-    public AbstractKafkaConsumer<V> setTopicName(String topicName) {
+    public AbstractKafkaConsumerGroup<V> setTopicName(String topicName) {
         this.topicName = topicName;
         return this;
     }
@@ -75,7 +73,7 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
         return topicName;
     }
 
-    public AbstractKafkaConsumer<V> setShouldSeekToEnd(boolean shouldSeekToEnd) {
+    public AbstractKafkaConsumerGroup<V> setShouldSeekToEnd(boolean shouldSeekToEnd) {
         this.shouldSeekToEnd = shouldSeekToEnd;
         return this;
     }
@@ -164,15 +162,7 @@ public abstract class AbstractKafkaConsumer<V> implements OnCancelListener {
     }
 
     private String getUniqueGroupID() {
-        String groupID;
-        try {
-            InetAddress ip = InetAddress.getLocalHost();
-            groupID = Base64.getEncoder().encodeToString(ip.getHostName().getBytes());
-        } catch (UnknownHostException e) {
-            logger.error(e.getMessage());
-            groupID = UUID.randomUUID().toString();
-        }
-        return groupID;
+        return groupId.toString();
     }
 
     private void getRecordValue(StringBuilder result, ConsumerRecord<String, V> record) {

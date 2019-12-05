@@ -8,9 +8,9 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import java.util.Collections;
 import java.util.Properties;
 
-public class StringKafka extends AbstractKafkaConsumer<String> {
+public class StringKafkaConsumerGroup extends AbstractKafkaConsumerGroup<String> {
 
-    public StringKafka(ObservableList<String> observableList) {
+    public StringKafkaConsumerGroup(ObservableList<String> observableList) {
         super(observableList);
     }
 

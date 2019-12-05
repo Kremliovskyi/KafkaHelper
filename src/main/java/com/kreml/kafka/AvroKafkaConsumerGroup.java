@@ -10,11 +10,11 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import java.util.Collections;
 import java.util.Properties;
 
-public class AvroKafka extends AbstractKafkaConsumer<GenericData.Record> {
+public class AvroKafkaConsumerGroup extends AbstractKafkaConsumerGroup<GenericData.Record> {
 
     private String schemaRegistry;
 
-    public AvroKafka(ObservableList<String> observableList, String schemaRegistry) {
+    public AvroKafkaConsumerGroup(ObservableList<String> observableList, String schemaRegistry) {
         super(observableList);
         this.schemaRegistry = schemaRegistry;
     }
