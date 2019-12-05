@@ -7,6 +7,7 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.*?>
 <VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.kreml.MainController">
     <padding>
         <Insets top="20" right="40" bottom="40" left="40"/>
@@ -25,6 +26,12 @@
             <Insets right="10" bottom="10" left="10"/>
         </padding>
         <Button fx:id="startConsumers" text="Start Consumers" onMouseClicked="#startConsumers"/>
+        <Label text="Consumers count:"/>
+        <Spinner fx:id="consumersSpinner" maxWidth="50" >
+            <valueFactory>
+                <SpinnerValueFactory.IntegerSpinnerValueFactory min="1" max="5"/>
+            </valueFactory>
+        </Spinner>
         <Button fx:id="seeLogs" text="Open Logs" onMouseClicked="#openLogs"/>
         <CheckBox fx:id="shouldSeekToEndCheckBox" selected="true" text="Seek to end"/>
         <CheckBox fx:id="avroTopicCheckBox" text="Is topic Avro?"/>

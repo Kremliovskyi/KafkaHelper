@@ -14,7 +14,7 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getClassLoader().getResource("mainController.fxml")));
         primaryStage.setTitle("Kafka Helper");
-        Scene scene = new Scene(root, 900, 900);
+        Scene scene = new Scene(root, 1200, 900);
         scene.getStylesheets().add("styles.css");
         primaryStage.setScene(scene);
         primaryStage.show();

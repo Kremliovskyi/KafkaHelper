@@ -18,6 +18,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.MultipleSelectionModel;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
@@ -51,6 +52,8 @@ public class MainController {
     public CheckBox avroTopicCheckBox;
     @FXML
     public Button seeLogs;
+    @FXML
+    public Spinner consumersSpinner;
     @FXML
     private ListView<String> contentArea;
 
@@ -93,6 +96,7 @@ public class MainController {
                     .setBrokerAddresses(brokerAddresses)
                     .setTopicName(topicName)
                     .setShouldSeekToEnd(shouldSeekToEndCheckBox.isSelected())
+                    .setConsumersCount((Integer) consumersSpinner.getValue())
                     .runConsumer();
             kafkaConsumer.setOnCancelled(() -> {
                 startConsumers.setDisable(false);

@@ -34,7 +34,6 @@ public abstract class AbstractKafkaConsumerGroup<V> implements OnCancelListener 
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private static final int CONSUMERS_COUNT = 3;
     private String brokerAddresses;
     private String topicName;
     private boolean shouldSeekToEnd;
@@ -46,6 +45,7 @@ public abstract class AbstractKafkaConsumerGroup<V> implements OnCancelListener 
     private Runnable onCancel;
     private List<KafkaConsumer<String, V>> consumerList = new ArrayList<>();
     private static UUID groupId = UUID.randomUUID();
+    private int consumersCount;
 
     abstract KafkaConsumer<String, V> createConsumer();
 
@@ -82,6 +82,11 @@ public abstract class AbstractKafkaConsumerGroup<V> implements OnCancelListener 
         return shouldSeekToEnd;
     }
 
+    public AbstractKafkaConsumerGroup<V> setConsumersCount(int consumersCount) {
+        this.consumersCount = consumersCount;
+        return this;
+    }
+
     public void stopConsumer() {
         proceed.set(false);
         consumerList.forEach(stringVKafkaConsumer -> {
@@ -98,11 +103,11 @@ public abstract class AbstractKafkaConsumerGroup<V> implements OnCancelListener 
     }
 
     public void runConsumer() {
-        executor = Executors.newFixedThreadPool(3);
+        executor = Executors.newFixedThreadPool(consumersCount);
         count = new AtomicInteger(1);
         proceed.set(true);
         onCancelRunTimes.set(0);
-        for (int i = 0; i < CONSUMERS_COUNT; i++) {
+        for (int i = 0; i < consumersCount; i++) {
             executor.submit(getFetchingRunnable());
         }
     }
@@ -146,7 +151,7 @@ public abstract class AbstractKafkaConsumerGroup<V> implements OnCancelListener 
     }
 
     private void runOnCancel() {
-        if (onCancelRunTimes.incrementAndGet() == CONSUMERS_COUNT) {
+        if (onCancelRunTimes.incrementAndGet() == consumersCount) {
             Platform.runLater(onCancel);
         }
     }
