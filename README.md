@@ -1,5 +1,4 @@
-JavaFX app that currently supports only consuming records from Apache Kafka.
-
+Features:
 1. Records displayed have keys, headers and values that are pretty printed JSON strings.
 2. Each record has counter at the beginning that ease to see how many records were fetched.
 3. App supports from 1 to 5 parallel consumers. 
@@ -13,9 +12,11 @@ JavaFX app that currently supports only consuming records from Apache Kafka.
 11. It is highly advisable to first stop consumer group prior to closing the app.
 
 Avro consumption in progress, one record selected for copying:
+
 ![Avro consumption in progress, one record selected for copying](https://github.com/Kremliovskyi/KafkaHelper/blob/master/src/test/resources/working-consumers.png)
 
 Regular topic consumption was stopped:
+
 ![Regular topic consumption was stopped](https://github.com/Kremliovskyi/KafkaHelper/blob/master/src/test/resources/metrics-raw.png)
 
 
