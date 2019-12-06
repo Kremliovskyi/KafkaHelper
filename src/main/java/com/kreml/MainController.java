@@ -53,7 +53,7 @@ public class MainController {
     @FXML
     public Button seeLogs;
     @FXML
-    public Spinner consumersSpinner;
+    public Spinner<Integer> consumersSpinner;
     @FXML
     private ListView<String> contentArea;
 
@@ -87,6 +87,35 @@ public class MainController {
         }
     }
 
+    @FXML
+    public void openLogs(MouseEvent mouseEvent) {
+        File tempDir = new File(System.getProperty("java.io.tmpdir"));
+        File logFile = new File(tempDir, "/logs/kafka-debug.log");
+        if (logFile.exists()) {
+            Desktop dt = Desktop.getDesktop();
+            try {
+                dt.open(logFile);
+            } catch (IOException e) {
+                logger.error(e.getMessage());
+            }
+        }
+    }
+
+    @FXML
+    public void selectAll(MouseEvent mouseEvent) {
+        contentArea.getSelectionModel().selectAll();
+    }
+
+    @FXML
+    public void deSelectAll(MouseEvent mouseEvent) {
+        contentArea.getSelectionModel().clearSelection();
+    }
+
+    @FXML
+    public void clear(MouseEvent mouseEvent) {
+        kafkaConsumer.resetList();
+    }
+
     private void onConsumerStart() {
         String topicName = topicNameField.getText();
         String brokerAddresses = brokerAddressesField.getText();
@@ -96,30 +125,38 @@ public class MainController {
                     .setBrokerAddresses(brokerAddresses)
                     .setTopicName(topicName)
                     .setShouldSeekToEnd(shouldSeekToEndCheckBox.isSelected())
-                    .setConsumersCount((Integer) consumersSpinner.getValue())
+                    .setConsumersCount(consumersSpinner.getValue())
                     .runConsumer();
-            kafkaConsumer.setOnCancelled(() -> {
-                startConsumers.setDisable(false);
-                startConsumers.setText("Start Consumers");
-                shouldSeekToEndCheckBox.setDisable(false);
-                avroTopicCheckBox.setDisable(false);
-                brokerAddressesField.setDisable(false);
-                topicNameField.setDisable(false);
-                schemaRegistryTextField.setDisable(false);
-            });
-            isConsumerStarted = true;
-            startConsumers.setText("Stop Consumers");
-            brokerAddressesField.setDisable(true);
-            topicNameField.setDisable(true);
-            shouldSeekToEndCheckBox.setDisable(true);
-            avroTopicCheckBox.setDisable(true);
-            schemaRegistryTextField.setDisable(true);
-            ObservableList<String> items = contentArea.getItems();
-            if (items != null) {
-                items.clear();
-            }
+            kafkaConsumer.setOnCancelled(this::guiOnStop);
+            guiOnStart();
         } else {
             showAlert("Please provide topic name and bootstrap servers separated with , or ;");
+        }
+    }
+
+    private void guiOnStop() {
+        startConsumers.setDisable(false);
+        startConsumers.setText("Start Consumers");
+        shouldSeekToEndCheckBox.setDisable(false);
+        avroTopicCheckBox.setDisable(false);
+        brokerAddressesField.setDisable(false);
+        topicNameField.setDisable(false);
+        schemaRegistryTextField.setDisable(false);
+        consumersSpinner.setDisable(false);
+    }
+
+    private void guiOnStart() {
+        isConsumerStarted = true;
+        startConsumers.setText("Stop Consumers");
+        brokerAddressesField.setDisable(true);
+        topicNameField.setDisable(true);
+        shouldSeekToEndCheckBox.setDisable(true);
+        avroTopicCheckBox.setDisable(true);
+        schemaRegistryTextField.setDisable(true);
+        consumersSpinner.setDisable(true);
+        ObservableList<String> items = contentArea.getItems();
+        if (items != null) {
+            items.clear();
         }
     }
 
@@ -178,21 +215,6 @@ public class MainController {
         });
     }
 
-    @FXML
-    public void selectAll(MouseEvent mouseEvent) {
-        contentArea.getSelectionModel().selectAll();
-    }
-
-    @FXML
-    public void deSelectAll(MouseEvent mouseEvent) {
-        contentArea.getSelectionModel().clearSelection();
-    }
-
-    @FXML
-    public void clear(MouseEvent mouseEvent) {
-        kafkaConsumer.resetList();
-    }
-
     private void initContentArea() {
         MultipleSelectionModel<String> selectionModel = contentArea.getSelectionModel();
         selectionModel.setSelectionMode(SelectionMode.MULTIPLE);
@@ -228,19 +250,5 @@ public class MainController {
         ContextMenu menu = new ContextMenu();
         menu.getItems().add(item);
         contentArea.setContextMenu(menu);
-    }
-
-    @FXML
-    public void openLogs(MouseEvent mouseEvent) {
-        File tempDir = new File(System.getProperty("java.io.tmpdir"));
-        File logFile = new File(tempDir, "/logs/kafka-debug.log");
-        if (logFile.exists()) {
-            Desktop dt = Desktop.getDesktop();
-            try {
-                dt.open(logFile);
-            } catch (IOException e) {
-                logger.error(e.getMessage());
-            }
-        }
     }
 }
