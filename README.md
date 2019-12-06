@@ -12,9 +12,10 @@ JavaFX app that currently supports only consuming records from Apache Kafka.
 10. "Clear" button will only clear the records pane without disrupting consumption.
 11. It is highly advisable to first stop consumer group prior to closing the app.
 
-
+Avro consumption in progress, one record selected for copying:
 ![Avro consumption in progress, one record selected for copying](https://github.com/Kremliovskyi/KafkaHelper/blob/master/src/test/resources/working-consumers.png)
 
+Regular topic consumption was stopped:
 ![Regular topic consumption was stopped](https://github.com/Kremliovskyi/KafkaHelper/blob/master/src/test/resources/metrics-raw.png)
 
 
