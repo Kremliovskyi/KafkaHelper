@@ -16,7 +16,7 @@ public class PartitionOffsetAssignerListener implements ConsumerRebalanceListene
 
     private KafkaConsumer consumer;
     private boolean shouldSeekToEnd;
-    private Map<TopicPartition, Long> offsetStorage = new HashMap<>();
+    private static Map<TopicPartition, Long> offsetStorage = new HashMap<>();
 
     PartitionOffsetAssignerListener(KafkaConsumer kafkaConsumer, boolean shouldSeekToEnd) {
         this.consumer = kafkaConsumer;
